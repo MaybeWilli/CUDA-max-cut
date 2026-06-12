@@ -4,32 +4,26 @@
 #include <vector>
 #include <random>
 #include <iostream>
+#include "graph.h"
 
 using namespace std;
 
 class MaxCut
 {
     public:
-        int* vertices;
-        int* edges;
-        int* offsets;
-        int nodes;
-        int* config;
-        int* weights;
         int weight;
-        int* gains;
+        Graph graph;
+        int config_size = 0;
+        vector<int> config;
+        vector<int> gains;
 
-        int* max_config;
+        vector<int> max_config;
         int max_weight;
 
-        MaxCut(int nodes);
-        MaxCut(int nodes, int* edges, int* offsets, int* weights);
-        MaxCut(int nodes, int* edges, int* offsets, int* weights, int* config);
-        void create_graph(int mode);
-        void create_undirected_graph(int* temp_offsets, int* temp_edges, int* temp_weights);
+        MaxCut(Graph& graph);
+        MaxCut(Graph& graph, vector<int>& config);
         bool solve();
         int calculate_gain(int candidate);
-        void display();
         void flip_vertex(int index);
         int get_weight();
 

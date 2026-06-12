@@ -2,199 +2,69 @@
 
 constexpr int mode = 0;
 
-MaxCut::MaxCut(int nodes) : nodes(nodes)
+MaxCut::MaxCut(Graph& graph) : graph(graph)
 {
-    config = new int[nodes];
-    for (int i = 0; i < nodes; i++)
+    config_size = int(graph.nodes/32)+1;
+    config.resize(config_size);
+    for (int i = 0; i < config_size; i++)
     {
-        config[i] = rand() % 2;
+        config[i] = rand();
     }
-    weight = 0;
-    create_graph(mode);
-
     weight = get_weight();
 
-    gains = new int[nodes];
-    for (int i = 0; i < nodes; i++)
+    gains.resize(graph.nodes);
+    for (int i = 0; i < graph.nodes; i++)
     {
         gains[i] = calculate_gain(i);
     }
 
     cout<<"Starting weight: "<<weight<<endl;
 
-    max_config = new int[nodes];
+    max_config.resize(config_size);
     max_weight = 0;
 }
 
-MaxCut::MaxCut(int nodes, int* edges, int* offsets, int* weights) : nodes(nodes)
+MaxCut::MaxCut(Graph& graph, vector<int>& config) : graph(graph)
 {
-    this->edges = new int[offsets[nodes]];
-    this->offsets = new int[nodes+1];
-    this->weights = new int[offsets[nodes]];
-    for (int i = 0; i < offsets[nodes]; i++)
-    {
-        this->edges[i] = edges[i];
-        this->weights[i] = weights[i];
-    }
-
-    for (int i = 0; i <= nodes; i++)
-    {
-        this->offsets[i] = offsets[i];
-    }
-    config = new int[nodes];
-    for (int i = 0; i < nodes; i++)
-    {
-        config[i] = rand() % 2;
-    }
-    weight = 0;
+    config_size = int(graph.nodes/32)+1;
+    this->config = config;
     weight = get_weight();
 
-    gains = new int[nodes];
-    for (int i = 0; i < nodes; i++)
+    gains.resize(graph.nodes);
+    for (int i = 0; i < graph.nodes; i++)
     {
         gains[i] = calculate_gain(i);
     }
 
     cout<<"Starting weight: "<<weight<<endl;
 
-    max_config = new int[nodes];
+    max_config.resize(config_size);
     max_weight = 0;
-}
-
-MaxCut::MaxCut(int nodes, int* edges, int* offsets, int* weights, int* config) : nodes(nodes)
-{
-    this->edges = new int[offsets[nodes]];
-    this->offsets = new int[nodes+1];
-    this->weights = new int[offsets[nodes]];
-    for (int i = 0; i < offsets[nodes]; i++)
-    {
-        this->edges[i] = edges[i];
-        this->weights[i] = weights[i];
-    }
-
-    for (int i = 0; i <= nodes; i++)
-    {
-        this->offsets[i] = offsets[i];
-    }
-    this->config = new int[nodes];
-    for (int i = 0; i < nodes; i++)
-    {
-        this->config[i] = ((config[int(i/32)] >> (i%32)) & 1);
-    }
 }
 
 int MaxCut::get_weight()
 {
     int weight = 0;
-    for (int i = 0; i < nodes; i++)
+    for (int i = 0; i < graph.nodes; i++)
     {
-        for (int j = offsets[i]; j < offsets[i+1]; j++)
+        for (int j = graph.offsets[i]; j < graph.offsets[i+1]; j++)
         {
-            if ((config[edges[j]] ^ config[i]) == 1)
+            int u = graph.edges[j];
+            int v = i;
+            if ((((config[int(v/32)] >> (v%32)) & 1) ^ ((config[int(u/32)] >> (u%32)) & 1)) == 1)
             {
-                weight += weights[j];
+                weight += graph.weights[j];
             }
         }
     }
     return weight/2;
 }
 
-void MaxCut::create_graph(int mode)
-{
-    int* temp_edges;
-    int* temp_offsets;
-    int* temp_weights;
-    if (mode == 0)
-    {
-        int* deg = new int[nodes];
-        int edge_total = 0;
-        for (int i = 0; i < nodes; i++)
-        {
-            deg[i] = rand() % 4 + 4;
-            //deg[i] = 1;
-            edge_total += deg[i];
-        }
-
-        temp_edges = new int[edge_total];
-        temp_weights = new int[edge_total];
-        temp_offsets = new int[nodes+1];
-        int offset = 0;
-        for (int i = 0; i < nodes; i++)
-        {
-            temp_offsets[i] = offset;
-            for (int j = 0; j < deg[i]; j++)
-            {
-                int v = rand() % nodes;
-                if (v == i)
-                {
-                    v = (v + 2) % nodes;
-                }
-                temp_edges[offset + j] = v;
-                temp_weights[offset + j] = rand() % 10 + 1;
-            }
-            offset += deg[i];
-
-        }
-        temp_offsets[nodes] = edge_total;
-    }
-   create_undirected_graph(temp_offsets, temp_edges, temp_weights);
-   delete[] temp_offsets;
-   delete[] temp_edges;
-   delete[] temp_weights;
-}
-
-void MaxCut::create_undirected_graph(int* temp_offsets, int* temp_edges, int* temp_weights)
-{
-    int* deg = new int[nodes+1]();
-    for (int v = 0; v < nodes; v++)
-    {
-        for (int j = temp_offsets[v]; j < temp_offsets[v+1]; j++)
-        {
-            int u = temp_edges[j];
-            deg[u]++;
-            deg[v]++;
-        }
-    }
-
-    int total = 0;
-    offsets = new int[nodes+1]();
-    int* indexes = new int[nodes+1]();
-    for (int i = 0; i < nodes; i++)
-    {
-        offsets[i] = total;
-        total += deg[i];
-        indexes[i] = offsets[i];
-    }
-
-    int total_edges = temp_offsets[nodes]*2;
-    offsets[nodes] = total_edges;
-    edges = new int[total_edges];
-    weights = new int[total_edges];
-    
-
-    for (int v = 0; v < nodes; v++)
-    {
-        for (int j = temp_offsets[v]; j < temp_offsets[v+1]; j++)
-        {
-            int u = temp_edges[j];
-            int weight = temp_weights[j];
-            edges[indexes[u]] = v;
-            edges[indexes[v]] = u;
-            weights[indexes[u]] = weight;
-            weights[indexes[v]] = weight;
-            indexes[u]++;
-            indexes[v]++;
-        }
-    }
-    delete[] deg;
-    delete[] indexes;
-}
-
 bool MaxCut::solve()
 {
     int max = 0;
     int max_index = -1;
-    for (int i = 0; i < nodes; i++)
+    for (int i = 0; i < graph.nodes; i++)
     {
         if (gains[i] > 0 && gains[i] > max)
         {
@@ -217,17 +87,17 @@ bool MaxCut::solve()
 void MaxCut::flip_vertex(int index)
 {
     weight += gains[index];
-    config[index] ^= 1;
-    for (int i = offsets[index]; i < offsets[index+1]; i++)
+    config[index/32] ^= 1 << (index & 31);
+    for (int i = graph.offsets[index]; i < graph.offsets[index+1]; i++)
     {
-        int v = edges[i];
-        if (config[index] == config[v])
+        int v = graph.edges[i];
+        if (((config[int(index/32)] >> (index%32)) & 1) == ((config[int(v/32)] >> (v%32)) & 1))
         {
-            gains[v] += 2 * weights[i];
+            gains[v] += 2 * graph.weights[i];
         }
         else
         {
-            gains[v] -= 2 * weights[i];
+            gains[v] -= 2 * graph.weights[i];
         }
     }
     gains[index] = -gains[index];
@@ -235,17 +105,17 @@ void MaxCut::flip_vertex(int index)
 
 int MaxCut::calculate_gain(int candidate)
 {
-    int c = config[candidate];
+    int c = ((config[int(candidate/32)] >> (candidate%32)) & 1);
     int gain = 0;
-    for (int i = offsets[candidate]; i < offsets[candidate+1]; i++)
+    for (int i = graph.offsets[candidate]; i < graph.offsets[candidate+1]; i++)
     {
-        if (c == config[edges[i]])
+        if (c == ((config[int(graph.edges[i]/32)] >> (graph.edges[i]%32)) & 1))
         {
-            gain += weights[i];
+            gain += graph.weights[i];
         }
         else
         {
-            gain -= weights[i];
+            gain -= graph.weights[i];
         }
     }
 
@@ -254,7 +124,7 @@ int MaxCut::calculate_gain(int candidate)
 
 void MaxCut::save_max_config()
 {
-    for (int i = 0; i < nodes; i++)
+    for (int i = 0; i < config_size; i++)
     {
         max_config[i] = config[i];
     }
@@ -264,13 +134,14 @@ void MaxCut::save_max_config()
 int MaxCut::get_max_weight()
 {
     int weight = 0;
-    for (int i = 0; i < nodes; i++)
+    for (int i = 0; i < graph.nodes; i++)
     {
-        for (int j = offsets[i]; j < offsets[i+1]; j++)
+        for (int j = graph.offsets[i]; j < graph.offsets[i+1]; j++)
         {
-            if ((max_config[edges[j]] ^ max_config[i]) == 1)
+            if ((((max_config[int(graph.edges[j]/32)] >> (graph.edges[j]%32)) & 1) ^ 
+                ((max_config[int(i/32)] >> (i%32)) & 1)) == 1)
             {
-                weight += weights[j];
+                weight += graph.weights[j];
             }
         }
     }
@@ -279,12 +150,16 @@ int MaxCut::get_max_weight()
 
 int MaxCut::perfect_solve()
 {
-    for (int i = 0; i < (1 << nodes); i++)
+    for (int i = 0; i < (1 << graph.nodes); i++)
     {
-        for (int j = 0; j < nodes; j++)
+        std::fill(config.begin(), config.end(), 0);
+        for (int j = 0; j < graph.nodes; j++)
         {
             bool mask = (i >> j) & 1;
-            config[j] = mask;
+            if (mask)
+                config[j/32] |= (1 << (j & 31));
+            else
+                config[j/32] &= ~(1 << (j & 31));
         }
 
         weight = get_weight();
@@ -299,8 +174,10 @@ int MaxCut::perfect_solve()
 
 /*int main()
 {
-    MaxCut maxCut2 = MaxCut(5000);
-    MaxCut maxCut = MaxCut(maxCut2.nodes, maxCut2.edges, maxCut2.offsets, maxCut2.weights);
+    Graph graph;
+    create_graph(graph, 16, 0);
+    MaxCut maxCut2 = MaxCut(graph);
+    MaxCut maxCut = MaxCut(graph);
     cout<<maxCut.weight<<" "<<maxCut.get_weight()<<endl;
     int iter = 150000;
 
@@ -318,7 +195,7 @@ int MaxCut::perfect_solve()
             int flips = 25;
             for (int i = 0; i < flips; i++)
             {
-                maxCut.flip_vertex(rand() % maxCut.nodes);
+                maxCut.flip_vertex(rand() % maxCut.graph.nodes);
             }
         }
         iter -= 1;
@@ -328,10 +205,10 @@ int MaxCut::perfect_solve()
     cout<<"Max cut: "<<maxCut.weight<<endl;
     cout<<"Max cut: "<<maxCut.get_weight()<<endl;
     int edge_total = 0;
-    for (int i = 0; i < maxCut.offsets[maxCut.nodes]; i++)
+    for (int i = 0; i < maxCut.graph.offsets[maxCut.graph.nodes]; i++)
     {
         //cout<<maxCut.weights[i]<<" ";
-        edge_total += maxCut.weights[i];
+        edge_total += maxCut.graph.weights[i];
         
     }
     cout<<endl;

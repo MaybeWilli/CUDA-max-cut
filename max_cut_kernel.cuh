@@ -23,7 +23,7 @@ __global__ void max_cut_init(int* edges, int* offsets, int* config, int* current
     int nodes, int config_size);
 
 __global__ void max_cut_solve(int* edges, int* offsets, int* config, int* current_weight, int* weights,
-    int nodes, int config_size);
+    int nodes, int config_size, int iterations);
 
 
 #endif

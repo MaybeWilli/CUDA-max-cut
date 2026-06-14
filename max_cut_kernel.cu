@@ -54,15 +54,13 @@ __global__ void max_cut_init(int* edges, int* offsets, int* config, int* current
 }
 
 __global__ void max_cut_solve(int* edges, int* offsets, int* config, int* current_weight, int* weights,
-    int nodes, int config_size)
+    int nodes, int config_size, int iterations)
 {
     int warp = threadIdx.x / 32;
     int lane = threadIdx.x % 32;
     int block = blockIdx.x;
-    int idx = threadIdx.x;
     int offset = blockIdx.x*(config_size);
 
-    int iterations = nodes*50;
     for (int iteration = 0; iteration < iterations; iteration++)
     {
         unsigned int rng = blockIdx.x * 1234567u +

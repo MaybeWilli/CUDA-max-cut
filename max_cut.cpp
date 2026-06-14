@@ -18,8 +18,6 @@ MaxCut::MaxCut(Graph& graph) : graph(graph)
         gains[i] = calculate_gain(i);
     }
 
-    cout<<"Starting weight: "<<weight<<endl;
-
     max_config.resize(config_size);
     max_weight = 0;
 }
@@ -35,8 +33,6 @@ MaxCut::MaxCut(Graph& graph, vector<int>& config) : graph(graph)
     {
         gains[i] = calculate_gain(i);
     }
-
-    cout<<"Starting weight: "<<weight<<endl;
 
     max_config.resize(config_size);
     max_weight = 0;

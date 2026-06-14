@@ -35,3 +35,13 @@ cmake --build build -j
 ```
 
 ## Max Cut Performance (GPU vs CPU)
+
+All entries are averaged over 10 runs
+Speedup = CPU time / GPU time  
+Improvement = (GPU cut weight − CPU cut weight) / CPU cut weight × 100%
+
+| Graph Type | Nodes  | GPU Weight | CPU Weight | GPU (ms) | CPU (ms) | Speedup | Improvement |
+|------------|--------|------------|------------|----------|----------|---------|-------------|
+| Power-law  | 10000  | 61430.6    | 60579.4    | 455.94   | 2280.45  | 5.01x   | 1.57%       |
+| Power-law  | 20000 | 1000000    | 122052.3   | 119961.7   | 898.68   | 9092.06  | 10.12x  | 1.77%       |
+| Power-law  | 50000 | 2500000    | 309653.1   | 305588.9   | 2231.18  | 56800.27 | 25.66x  | 1.33%       |

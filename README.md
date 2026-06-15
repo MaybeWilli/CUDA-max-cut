@@ -6,6 +6,10 @@ Each iteration samples a random vertex and evaluates the cut gain of flipping it
 
 Moves that improve the cut are accepted greedily, while non-improving moves may be accepted probabilistically based on a temperature schedule, allowing the algorithm to escape local minima.
 
+## System Overview
+
+The graph is represented in CSR format. Config is represented in bit-packed 32-bit integers. Each block is divided into 8 warps, each of which randomly chooses a bit to flip, and accepts positive gain flips greedily. Negative gains are accepted at a probability controlled by a temperature parameter. Gain calculation is accelerated using the shufle_sync warp primitive. 32 total blocks are launched per kernel, allowing for more search trajectories.
+
 ## Build Instructions
 
 ### Option 1: 
@@ -50,9 +54,21 @@ Improvement = (GPU cut weight − CPU cut weight) / CPU cut weight × 100%
 | Sparse     | 20000 | 449256.1   | 443858.8   | 891.36   | 9204.11  | 10.32x  | 1.22%       |
 | Sparse     | 50000 | 1113419.7  | 1107076.4  | 2821.71  | 56678.59 | 20.09x  | 0.60%       |
 
-## CPU Baseline
+## Running Instructions
 
-CPU baseline uses a single-threaded gain-cached algorithm that uses greedy hill-climbing until it reaches a local peak. Pertubations are used for greater search space.
+The executable produced is CUDA-max-cut/max_cut. It comes with four command-line arguments: 
+  nodes: determines the amount of nodes in the graph. 
+  mode: can be sparse, grid, or powerlaw, depending on the desired graph type
+  iterations: number of iterations. Defaults to nodes*50
+  compare: can be cpu, gpu, compare, or verify. CPU runs CPU only. GPU runs GPU only. Verify runs GPU, then verifies the answer with CPU, and Compare runs both and compares peformances.
+  help: shows all arguments
+
+Example:
+
+```
+./max_cut --nodes 10000 --graph powerlaw
+```
+  
 
 ## Notes
 
@@ -64,6 +80,10 @@ To run test script:
 sudo chmod +x ./test_script.sh
 ./test_script.sh
 ```
+
+## CPU Baseline
+
+CPU baseline uses a single-threaded gain-cached algorithm that uses greedy hill-climbing until it reaches a local peak. Pertubations are used for greater search space.
 
 ### Hardware Used
 

@@ -57,10 +57,15 @@ Improvement = (GPU cut weight − CPU cut weight) / CPU cut weight × 100%
 ## Running Instructions
 
 The executable produced is CUDA-max-cut/max_cut. It comes with four command-line arguments: 
+
   nodes: determines the amount of nodes in the graph. 
+  
   mode: can be sparse, grid, or powerlaw, depending on the desired graph type
+  
   iterations: number of iterations. Defaults to nodes*50
+  
   compare: can be cpu, gpu, compare, or verify. CPU runs CPU only. GPU runs GPU only. Verify runs GPU, then verifies the answer with CPU, and Compare runs both and compares peformances.
+  
   help: shows all arguments
 
 Example:
